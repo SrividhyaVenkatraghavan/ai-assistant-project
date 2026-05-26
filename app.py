@@ -1,17 +1,22 @@
 import streamlit as st
 import os
-from dotenv import load_dotenv
-from huggingface_hub import InferenceClient
+from groq import Groq
 
-load_dotenv(dotenv_path=os.path.join(os.path.dirname(__file__), '..', '.env'))
+# Directly set API key path
+env_path = r"C:\Users\HP\OneDrive\Desktop\ai-assistant-project\.env"
 
-client = InferenceClient(
-   model="Qwen/Qwen2.5-72B-Instruct",
-    token=os.getenv("HF_TOKEN")
-)
+# Read .env file manually
+with open(env_path) as f:
+    for line in f:
+        line = line.strip()
+        if line and not line.startswith("#"):
+            key, value = line.split("=", 1)
+            os.environ[key.strip()] = value.strip()
 
-st.set_page_config(page_title="OSS Assistant", page_icon="🧠")
-st.title("🧠 OSS AI Assistant (Mistral via HuggingFace)")
+client = Groq(api_key=os.environ.get("GROQ_API_KEY"))
+
+st.set_page_config(page_title="Frontier Assistant", page_icon="🤖")
+st.title("🤖 Frontier AI Assistant (Llama via Groq)")
 
 if "messages" not in st.session_state:
     st.session_state.messages = []
@@ -30,10 +35,9 @@ if prompt := st.chat_input("Ask me anything..."):
         for m in st.session_state.messages
     ]
 
-    response = client.chat_completion(
-        messages=[{"role": "system", "content": "You are a helpful assistant."}] + history,
-        max_tokens=512,
-        temperature=0.7
+    response = client.chat.completions.create(
+        model="llama-3.3-70b-versatile",
+        messages=[{"role": "system", "content": "You are a helpful assistant."}] + history
     )
 
     reply = response.choices[0].message.content
